@@ -1,0 +1,22 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 61.0.0"]
+
+[project]
+name = "Xplorer"
+description = "A novelty experimentation wrapper for minigrid"
+keywords = ["reinforcement", "learning", "exploration", "suite"]
+authors = [{ name = "Rishav Bhagat", email = "rishavbhagat.cs@gmail.com" }]
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/rishavb123/Xplorer"
+
+[project.optional-dependencies]
+all = []
+
+[tool.setuptools]
+packages = ["xplorer"]
