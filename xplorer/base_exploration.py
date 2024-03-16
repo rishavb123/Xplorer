@@ -1,6 +1,6 @@
 """Base exploration algorithms templates."""
 
-from typing import Type, Dict, Any, Optional
+from typing import Type, Dict, Any
 
 import abc
 import numpy as np
@@ -14,8 +14,8 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.off_policy_algorithm import OffPolicyAlgorithm
 
-import stable_baselines3 as sb3
-import inspect
+# import stable_baselines3 as sb3
+# import inspect
 
 
 class IRMethod(abc.ABC):
@@ -71,6 +71,29 @@ class IRMethod(abc.ABC):
             * np.power(1.0 - self.kappa, time_steps)
             * self._compute_irs(observations=observations, actions=actions, **kwargs)
         )
+
+
+class CompositeIRMethod(IRMethod):
+
+    def __init__(
+        self, ir_algs: Dict[str, IRMethod], initial_beta: float, kappa: float
+    ) -> None:
+        super().__init__(initial_beta, kappa)
+        self.ir_algs = ir_algs
+
+    def _compute_irs(
+        self,
+        observations: np.ndarray,
+        actions: np.ndarray,
+        **kwargs: Dict[str, Dict[str, Any]],
+    ) -> np.ndarray:
+        irs = {
+            self.ir_algs[k].compute_irs(
+                observations=observations, actions=actions, kwargs=kwargs[k]
+            )
+            for k in self.ir_algs
+        }
+        return np.array(irs.values()).sum(axis=0)
 
 
 def create_on_policy_ir_class(model_cls: Type[OnPolicyAlgorithm]):
@@ -163,7 +186,7 @@ def create_off_policy_ir_class(model_cls: Type[OffPolicyAlgorithm]):
             def sample_with_ir(
                 replay_buffer: ReplayBuffer,
                 batch_size: int,
-                env: Optional[VecNormalize] = None,
+                env: VecNormalize | None = None,
             ) -> ReplayBufferSamples:
                 samples = replay_buffer.sample_without_ir(batch_size, env)
                 if self.ir_alg is not None:
@@ -207,16 +230,16 @@ def create_off_policy_ir_class(model_cls: Type[OffPolicyAlgorithm]):
     return IRModel
 
 
-on_policy_algs = inspect.getmembers(
-    sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OnPolicyAlgorithm)
-)
-for on_policy_alg_name, on_policy_alg_cls in on_policy_algs:
-    globals()[f"IR_{on_policy_alg_name}"] = create_on_policy_ir_class(on_policy_alg_cls)
+# on_policy_algs = inspect.getmembers(
+#     sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OnPolicyAlgorithm)
+# )
+# for on_policy_alg_name, on_policy_alg_cls in on_policy_algs:
+#     globals()[f"IR_{on_policy_alg_name}"] = create_on_policy_ir_class(on_policy_alg_cls)
 
-off_policy_algs = inspect.getmembers(
-    sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OffPolicyAlgorithm)
-)
-for off_policy_alg_name, off_policy_alg_cls in off_policy_algs:
-    globals()[f"IR_{off_policy_alg_name}"] = create_off_policy_ir_class(
-        off_policy_alg_cls
-    )
+# off_policy_algs = inspect.getmembers(
+#     sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OffPolicyAlgorithm)
+# )
+# for off_policy_alg_name, off_policy_alg_cls in off_policy_algs:
+#     globals()[f"IR_{off_policy_alg_name}"] = create_off_policy_ir_class(
+#         off_policy_alg_cls
+#     )
