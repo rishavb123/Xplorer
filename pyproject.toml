@@ -10,7 +10,11 @@ authors = [{ name = "Rishav Bhagat", email = "rishavbhagat.cs@gmail.com" }]
 readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "experiment-lab",
+    "experiment-lab[rl]",
+    "experiment-lab[rl-vid]",
+]
 
 [project.urls]
 Repository = "https://github.com/rishavb123/Xplorer"
