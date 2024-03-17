@@ -14,8 +14,8 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.off_policy_algorithm import OffPolicyAlgorithm
 
-# import stable_baselines3 as sb3
-# import inspect
+import stable_baselines3 as sb3
+import inspect
 
 
 class IRMethod(abc.ABC):
@@ -74,10 +74,18 @@ class IRMethod(abc.ABC):
 
 
 class CompositeIRMethod(IRMethod):
+    """Added composite instrinsic reward calculator method."""
 
     def __init__(
         self, ir_algs: Dict[str, IRMethod], initial_beta: float, kappa: float
     ) -> None:
+        """The constructor for composite ir method.
+
+        Args:
+            ir_algs (Dict[str, IRMethod]): The ir algorithms to combine.
+            initial_beta (float): The initial multiplier for the combined instrinsic reward.
+            kappa (float): The beta decay.
+        """
         super().__init__(initial_beta, kappa)
         self.ir_algs = ir_algs
 
@@ -87,6 +95,15 @@ class CompositeIRMethod(IRMethod):
         actions: np.ndarray,
         **kwargs: Dict[str, Dict[str, Any]],
     ) -> np.ndarray:
+        """Computes the unweighted instrinsic rewards.
+
+        Args:
+            observations (np.ndarray): The agent observations.
+            actions (np.ndarray): The actions the agent was taking.
+
+        Returns:
+            np.ndarray: The computed unweighted instrinsic rewards.
+        """
         irs = {
             self.ir_algs[k].compute_irs(
                 observations=observations, actions=actions, kwargs=kwargs[k]
@@ -230,16 +247,16 @@ def create_off_policy_ir_class(model_cls: Type[OffPolicyAlgorithm]):
     return IRModel
 
 
-# on_policy_algs = inspect.getmembers(
-#     sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OnPolicyAlgorithm)
-# )
-# for on_policy_alg_name, on_policy_alg_cls in on_policy_algs:
-#     globals()[f"IR_{on_policy_alg_name}"] = create_on_policy_ir_class(on_policy_alg_cls)
+on_policy_algs = inspect.getmembers(
+    sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OnPolicyAlgorithm)
+)
+for on_policy_alg_name, on_policy_alg_cls in on_policy_algs:
+    globals()[f"IR_{on_policy_alg_name}"] = create_on_policy_ir_class(on_policy_alg_cls)
 
-# off_policy_algs = inspect.getmembers(
-#     sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OffPolicyAlgorithm)
-# )
-# for off_policy_alg_name, off_policy_alg_cls in off_policy_algs:
-#     globals()[f"IR_{off_policy_alg_name}"] = create_off_policy_ir_class(
-#         off_policy_alg_cls
-#     )
+off_policy_algs = inspect.getmembers(
+    sb3, lambda obj: inspect.isclass(obj) and issubclass(obj, OffPolicyAlgorithm)
+)
+for off_policy_alg_name, off_policy_alg_cls in off_policy_algs:
+    globals()[f"IR_{off_policy_alg_name}"] = create_off_policy_ir_class(
+        off_policy_alg_cls
+    )
